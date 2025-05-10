@@ -1,4 +1,5 @@
 let imageCount = 0;
+let msnry;
 
 function createFrame(index, dataUrl = null) {
   const gallery = document.getElementById('gallery');
@@ -16,11 +17,22 @@ function createFrame(index, dataUrl = null) {
   const img = document.createElement('img');
   img.id = 'img' + index;
   img.alt = 'Bild ' + index;
-  if (dataUrl) img.src = dataUrl;
 
   frame.appendChild(input);
   frame.appendChild(img);
   gallery.appendChild(frame);
+
+  if (dataUrl) {
+    img.src = dataUrl;
+    frame.classList.remove('empty');
+  } else {
+    frame.classList.add('empty');
+  }
+
+  if (msnry) {
+    msnry.appended(frame);
+    msnry.layout();
+  }
 }
 
 function loadImage(input, index) {
@@ -28,31 +40,39 @@ function loadImage(input, index) {
   const reader = new FileReader();
   reader.onload = function (e) {
     const dataUrl = e.target.result;
-    document.getElementById('img' + index).src = dataUrl;
+    const img = document.getElementById('img' + index);
+    img.src = dataUrl;
     localStorage.setItem('img' + index, dataUrl);
 
-    // Wenn es der letzte Frame war → neuen leeren Frame hinzufügen
+    const frame = img.parentElement;
+    frame.classList.remove('empty');
+
     if (index === imageCount - 1) {
       createFrame(imageCount);
       imageCount++;
     }
+
+    if (msnry) msnry.layout();
   };
-  if (file) {
-    reader.readAsDataURL(file);
-  }
+  if (file) reader.readAsDataURL(file);
 }
 
 window.onload = function () {
   const keys = Object.keys(localStorage).filter(k => k.startsWith('img')).sort();
 
-  // Alle gespeicherten Bilder laden
   keys.forEach((key, i) => {
     const dataUrl = localStorage.getItem(key);
     createFrame(i, dataUrl);
     imageCount++;
   });
 
-  // Immer einen leeren Rahmen hinten hinzufügen
   createFrame(imageCount);
   imageCount++;
+
+  msnry = new Masonry('#gallery', {
+    itemSelector: '.frame',
+    columnWidth: 300,
+    gutter: 20,
+    fitWidth: true
+  });
 };
